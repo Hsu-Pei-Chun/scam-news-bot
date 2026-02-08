@@ -107,92 +107,10 @@
 
 ## 如何取得群組的 Group ID
 
-要取得 LINE 群組的 Group ID，需要透過 Webhook 來取得。以下是步驟：
-
-### 方法一：使用臨時 Webhook 伺服器
-
-1. 建立一個簡單的 webhook 伺服器來接收事件。建立 `webhook-server.js`：
-
-```javascript
-import http from "http";
-
-const PORT = 3000;
-
-const server = http.createServer((req, res) => {
-  if (req.method === "POST" && req.url === "/webhook") {
-    let body = "";
-
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
-
-    req.on("end", () => {
-      const data = JSON.parse(body);
-      console.log("=== Received Webhook Event ===");
-      console.log(JSON.stringify(data, null, 2));
-
-      // 找出 Group ID
-      if (data.events) {
-        data.events.forEach((event) => {
-          if (event.source && event.source.type === "group") {
-            console.log("\n🎯 Group ID:", event.source.groupId);
-          }
-        });
-      }
-
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ status: "ok" }));
-    });
-  } else {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("Webhook server is running");
-  }
-});
-
-server.listen(PORT, () => {
-  console.log(`Webhook server listening on port ${PORT}`);
-  console.log("Use ngrok or similar tool to expose this server:");
-  console.log("  ngrok http 3000");
-});
-```
-
-2. 使用 ngrok 將本地伺服器暴露到網路：
-
-```bash
-# 安裝 ngrok（如果還沒安裝）
-# macOS: brew install ngrok
-# Windows: 從 https://ngrok.com/download 下載
-
-# 啟動 webhook 伺服器
-node webhook-server.js
-
-# 在另一個終端機啟動 ngrok
-ngrok http 3000
-```
-
-3. 設定 Webhook URL：
-   - 回到 LINE Developers Console
-   - 在 Messaging API 標籤中找到「Webhook settings」
-   - 將 ngrok 提供的 HTTPS URL 加上 `/webhook` 填入
-     （例如：`https://xxxx-xx-xx-xx-xx.ngrok.io/webhook`）
-   - 開啟「Use webhook」
-
-4. 取得 Group ID：
-   - 將 Bot 加入目標群組（透過 Bot 的 LINE ID 或 QR Code）
-   - 在群組中發送任意訊息
-   - 查看 webhook 伺服器的 console 輸出，找到 `Group ID`
-
-5. 記下 Group ID 後，可以關閉 webhook 伺服器
-
-### 方法二：使用 LINE Bot Designer（不需要自己架設伺服器）
-
-可以使用線上工具如 [Webhook.site](https://webhook.site/) 來接收 webhook：
-
-1. 前往 https://webhook.site/
-2. 複製提供的 URL
-3. 將此 URL 設定為 LINE Bot 的 Webhook URL
-4. 將 Bot 加入群組並發送訊息
-5. 在 Webhook.site 頁面查看收到的請求，找出 Group ID
+1. 前往 [Webhook.site](https://webhook.site/)，複製頁面上的 URL
+2. 到 LINE Developers Console > Messaging API 標籤，將該 URL 填入「Webhook URL」並開啟「Use webhook」
+3. 把 Bot 加入群組，在群組中發送任意訊息
+4. 回到 Webhook.site 查看請求內容，找到 `source.groupId` 即為 Group ID
 
 ---
 
