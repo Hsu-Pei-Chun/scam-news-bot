@@ -5,12 +5,13 @@ import { messagingApi } from "@line/bot-sdk";
 const config = {
   youtube: {
     apiKey: process.env.YOUTUBE_API_KEY,
-    searchQuery: "詐騙新聞",
+    searchQuery: "台灣 詐騙手法 新聞",
     maxResults: 1,
   },
   line: {
     channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
-    groupId: process.env.LINE_GROUP_ID,
+    groupIds:
+      process.env.LINE_GROUP_IDS?.split(",").map((id) => id.trim()) || [],
   },
 };
 
@@ -31,6 +32,8 @@ async function searchLatestScamVideo() {
     type: "video",
     order: "date",
     maxResults: maxResults.toString(),
+    regionCode: "TW",
+    relevanceLanguage: "zh-TW",
     key: apiKey,
   });
 
@@ -67,37 +70,39 @@ async function searchLatestScamVideo() {
 }
 
 /**
- * Send a message to LINE group using Push Message API
+ * Send a message to all LINE groups using Push Message API
  * @param {string} message - The message to send
  */
-async function pushToLineGroup(message) {
-  const { channelAccessToken, groupId } = config.line;
+async function pushToLineGroups(message) {
+  const { channelAccessToken, groupIds } = config.line;
 
   if (!channelAccessToken) {
     throw new Error("LINE_CHANNEL_ACCESS_TOKEN is not set");
   }
 
-  if (!groupId) {
-    throw new Error("LINE_GROUP_ID is not set");
+  if (!groupIds || groupIds.length === 0) {
+    throw new Error("LINE_GROUP_IDS is not set");
   }
 
   const client = new messagingApi.MessagingApiClient({
     channelAccessToken,
   });
 
-  console.log(`Pushing message to LINE group: ${groupId}`);
+  for (const groupId of groupIds) {
+    console.log(`Pushing message to LINE group: ${groupId}`);
 
-  await client.pushMessage({
-    to: groupId,
-    messages: [
-      {
-        type: "text",
-        text: message,
-      },
-    ],
-  });
+    await client.pushMessage({
+      to: groupId,
+      messages: [
+        {
+          type: "text",
+          text: message,
+        },
+      ],
+    });
 
-  console.log("Message sent successfully!");
+    console.log(`Message sent to ${groupId} successfully!`);
+  }
 }
 
 /**
@@ -131,7 +136,7 @@ async function main() {
 
     // Format and send message
     const message = formatMessage(video);
-    await pushToLineGroup(message);
+    await pushToLineGroups(message);
 
     console.log("=== Bot execution completed successfully ===");
   } catch (error) {
