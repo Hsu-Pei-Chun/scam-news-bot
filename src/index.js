@@ -5,8 +5,9 @@ import { messagingApi } from "@line/bot-sdk";
 const config = {
   youtube: {
     apiKey: process.env.YOUTUBE_API_KEY,
-    searchQuery: "台灣 詐騙手法 新聞",
+    searchQuery: "詐騙 新聞",
     maxResults: 1,
+    videoDuration: "short",
   },
   line: {
     channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN,
@@ -20,7 +21,7 @@ const config = {
  * @returns {Promise<{title: string, url: string} | null>}
  */
 async function searchLatestScamVideo() {
-  const { apiKey, searchQuery, maxResults } = config.youtube;
+  const { apiKey, searchQuery, maxResults, videoDuration } = config.youtube;
 
   if (!apiKey) {
     throw new Error("YOUTUBE_API_KEY is not set");
@@ -34,6 +35,7 @@ async function searchLatestScamVideo() {
     maxResults: maxResults.toString(),
     regionCode: "TW",
     relevanceLanguage: "zh-TW",
+    videoDuration,
     key: apiKey,
   });
 
