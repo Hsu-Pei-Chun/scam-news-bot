@@ -5,7 +5,7 @@ import { messagingApi } from "@line/bot-sdk";
 const config = {
   youtube: {
     apiKey: process.env.YOUTUBE_API_KEY,
-    searchQuery: "詐騙 新聞",
+    searchQuery: "台灣 假冒詐騙 手法 新聞",
     maxResults: 1,
     videoDuration: "short",
   },
